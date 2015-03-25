@@ -60,8 +60,17 @@ class DataTableSummaryRow extends Row
      */
     private function sumTable($table)
     {
-        foreach ($table->getRows() as $row) {
-            $this->sumRow($row, $enableCopyMetadata = false, $table->getMetadata(DataTable::COLUMN_AGGREGATION_OPS_METADATA_NAME));
+        $metadata = $table->getMetadata(DataTable::COLUMN_AGGREGATION_OPS_METADATA_NAME);
+        $enableCopyMetadata = false;
+
+        foreach ($table->getRowsWithoutSummaryRow() as $row) {
+            $this->sumRow($row, $enableCopyMetadata, $metadata);
+        }
+
+        $summaryRow = $table->getRowFromId(DataTable::ID_SUMMARY_ROW);
+
+        if ($summaryRow) {
+            $this->sumRow($summaryRow, $enableCopyMetadata, $metadata);
         }
     }
 }
