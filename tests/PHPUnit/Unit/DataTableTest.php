@@ -13,6 +13,7 @@ use Piwik\DataTable\Manager;
 use Piwik\DataTable\Row;
 use Piwik\DataTable;
 use Piwik\Timer;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
  * @group DataTableTest
@@ -293,12 +294,44 @@ class DataTableTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue(strlen($serializedDatatable) > 1000);
 
-        $table = unserialize($serializedDatatable);
-        $this->assertTrue($table[0] instanceof \Piwik\DataTable\Row);
+        $table    = DataTable::fromSerializedArray($serializedDatatable);
+        $firstRow = $table->getFirstRow();
+        $this->assertTrue($firstRow instanceof \Piwik\DataTable\Row);
 
-        $this->assertEquals('piwik.org', $table[0]->getColumn('label'));
-        $this->assertEquals(10509, $table[0]->getColumn(2));
-        $this->assertEquals(1581, $table[0]->getIdSubDataTable());
+        $this->assertEquals('piwik.org', $firstRow->getColumn('label'));
+        $this->assertEquals(10509, $firstRow->getColumn(2));
+        $this->assertEquals(1581, $firstRow->getIdSubDataTable());
+    }
+
+    public function test_unserializeWorks_WhenDataTableFormatPriorPiwik2_13()
+    {
+        $serializedDatatable = array();
+        // Prior Piwik 2.13, we serialized the actual Row or DataTableSummaryRow instances, afterwards only arrays
+        require PIWIK_INCLUDE_PATH . "/tests/resources/pre-Piwik2_13-DataTable-archived.php";
+        require_once PIWIK_INCLUDE_PATH . "/core/DataTable/Bridges.php";
+
+        $table1 = $serializedDatatable[0];
+        $table2 = $serializedDatatable[1];
+
+        $this->assertTrue(strlen($table1) > 1000);
+        $this->assertTrue(strlen($table2) > 1000);
+
+        $table1 = DataTable::fromSerializedArray($table1);
+        $row1   = $table1->getFirstRow();
+        $this->assertTrue($row1 instanceof \Piwik\DataTable\Row\DataTableSummaryRow);
+
+        $table2 = DataTable::fromSerializedArray($table2);
+        $row2   = $table2->getFirstRow();
+        $this->assertTrue($row2 instanceof \Piwik\DataTable\Row);
+        $this->assertFalse($row2 instanceof \Piwik\DataTable\Row\DataTableSummaryRow);
+
+        $this->assertEquals('start', $row1->getColumn('label'));
+        $this->assertEquals(89, $row1->getColumn(2));
+        $this->assertEquals(2260, $row1->getIdSubDataTable());
+
+        $this->assertEquals('Ask', $row2->getColumn('label'));
+        $this->assertEquals(11, $row2->getColumn(2));
+        $this->assertEquals(3335, $row2->getIdSubDataTable());
     }
 
     /**
