@@ -21,6 +21,11 @@ namespace {
         public $c;
     }
 
+    class Piwik_DataTable_SerializedDataTableSummary
+    {
+        public $c;
+    }
+
     class Piwik_DataTable_Row_DataTableSummary extends DataTableSummaryRow
     {
     }

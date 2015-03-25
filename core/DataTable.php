@@ -1275,26 +1275,31 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
      *
      * _Note: This function will successfully load DataTables serialized by Piwik 1.X._
      *
-     * @param string $stringSerialized A string with the format of a string in the array returned by
+     * @param string $serialized A string with the format of a string in the array returned by
      *                                 {@link serialize()}.
      * @throws Exception if `$stringSerialized` is invalid.
      */
-    public function addRowsFromSerializedArray($stringSerialized)
+    public function addRowsFromSerializedArray($serialized)
     {
-        $serialized = @unserialize($stringSerialized);
+        $serialized = str_replace(array('O:19:"Piwik\DataTable\Row"', 'O:19:"Piwik_DataTable_Row"'), 'O:29:"Piwik_DataTable_SerializedRow"', $serialized);
+        $serialized = str_replace(array('O:39:"Piwik\DataTable\Row\DataTableSummaryRow"', 'O:36:"Piwik_DataTable_Row_DataTableSummary"'), 'O:42:"Piwik_DataTable_SerializedDataTableSummary"', $serialized);
+        $rows = unserialize($serialized);
 
-        if ($serialized === false) {
-            $stringSerialized = str_replace(array('O:19:"Piwik\DataTable\Row"', 'O:19:"Piwik_DataTable_Row"'), 'O:29:"Piwik_DataTable_SerializedRow"', $stringSerialized);
-            $serialized = unserialize($stringSerialized);
-
-            if ($serialized === false || !isset($serialized->c)) {
-                throw new Exception("The unserialization has failed!");
-            }
-
-            $serialized = $serialized->c;
+        if ($rows === false) {
+            throw new Exception("The unserialization has failed!");
         }
 
-        $this->addRowsFromArray($serialized);
+        foreach ($rows as $index => &$row) {
+            if (isset($row->c) && $row instanceof \Piwik_DataTable_SerializedDataTableSummary) {
+                $row = new DataTableSummaryRow(null, $row->c);
+            } elseif (isset($row->c)) {
+                $row = $row->c;
+            } elseif ($row instanceof \Piwik_DataTable_SerializedDataTableSummary) {
+                $row = new DataTableSummaryRow();
+            }
+        }
+
+        $this->addRowsFromArray($rows);
     }
 
     /**

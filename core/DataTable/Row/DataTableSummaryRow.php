@@ -33,9 +33,9 @@ class DataTableSummaryRow extends Row
      *                                 but it will not be set as this row's subtable (so
      *                                 getSubtable() will return false).
      */
-    public function __construct($subTable = null)
+    public function __construct($subTable = null, $row = array())
     {
-        parent::__construct();
+        parent::__construct($row);
 
         if ($subTable !== null) {
             $this->sumTable($subTable);

@@ -86,17 +86,6 @@ class Row extends \ArrayObject
         );
     }
 
-    public function __wakeup()
-    {
-        if (isset($this['c'])) {
-            $c = $this['c'];
-            unset($this['c']);
-            $this->metadata   = $c[1];   // self::METADATA
-            $this->subtableId = $c[3];   // self::DATATABLE_ASSOCIATED
-            $this->exchangeArray($c[0]); // self::COLUMNS
-        }
-    }
-
     /**
      * When destroyed, a row destroys its associated subtable if there is one.
      * @ignore
